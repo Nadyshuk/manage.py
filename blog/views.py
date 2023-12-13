@@ -2,41 +2,136 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import YourModel
-from .serializers import YourModelSerializer
+from .models import Post, Comment
+from .serializers import PostSerializer, CommentSerializer
 
-class YourModelListCreateView(APIView):
+class PostListCreateView(APIView):
     def get(self, request):
-        your_models = YourModel.objects.all()
-        serializer = YourModelSerializer(your_models, many=True)
-        return Response(serializer.data)
+        posts = Post.objects.all()
+        serializer = PostSerializer(posts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        serializer = YourModelSerializer(data=request.data)
+        serializer = PostSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class YourModelDetailView(APIView):
-    def get(self, request, pk):
-        your_model = YourModel.objects.get(pk=pk)
-        serializer = YourModelSerializer(your_model)
-        return Response(serializer.data)
+class PostDetailView(APIView):
+    def get_object(self, pk):
+        try:
+            return Post.objects.get(pk=pk)
+        except Post.DoesNotExist:
+            raise Http404
 
+    @swagger_auto_schema(
+        operation_description="Отримати деталі поста",
+        responses={
+            200: PostSerializer,
+            404: "Not Found"
+        },
+        tags=["Posts"]
+    )
+    def get(self, request, pk):
+        post = self.get_object(pk)
+        serializer = PostSerializer(post)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        operation_description="Оновити деталі поста",
+        request_body=PostSerializer,
+        responses={
+            200: PostSerializer,
+            400: "Bad Request",
+            404: "Not Found"
+        },
+        tags=["Posts"]
+    )
     def put(self, request, pk):
-        your_model = YourModel.objects.get(pk=pk)
-        serializer = YourModelSerializer(your_model, data=request.data)
+        post = self.get_object(pk)
+        serializer = PostSerializer(post, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @swagger_auto_schema(
+        operation_description="Видалити пост",
+        responses={
+            204: "No Content",
+            404: "Not Found"
+        },
+        tags=["Posts"]
+    )
     def delete(self, request, pk):
-        your_model = YourModel.objects.get(pk=pk)
-        your_model.delete()
+        post = self.get_object(pk)
+        post.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+class CommentListCreateView(APIView):
+    def get(self, request):
+        comments = Comment.objects.all()
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = CommentSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CommentDetailView(APIView):
+    def get_object(self, pk):
+        try:
+            return Comment.objects.get(pk=pk)
+        except Comment.DoesNotExist:
+            raise Http404
+
+    @swagger_auto_schema(
+        operation_description="Отримати деталі коментаря",
+        responses={
+            200: CommentSerializer,
+            404: "Not Found"
+        },
+        tags=["Comments"]
+    )
+    def get(self, request, pk):
+        comment = self.get_object(pk)
+        serializer = CommentSerializer(comment)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @swagger_auto_schema(
+        operation_description="Оновити деталі коментаря",
+        request_body=CommentSerializer,
+        responses={
+            200: CommentSerializer,
+            400: "Bad Request",
+            404: "Not Found"
+        },
+        tags=["Comments"]
+    )
+    def put(self, request, pk):
+        comment = self.get_object(pk)
+        serializer = CommentSerializer(comment, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @swagger_auto_schema(
+        operation_description="Видалити коментар",
+        responses={
+            204: "No Content",
+            404: "Not Found"
+        },
+        tags=["Comments"]
+    )
+    def delete(self, request, pk):
+        comment = self.get_object(pk)
+        comment.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token

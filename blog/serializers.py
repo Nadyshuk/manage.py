@@ -1,22 +1,18 @@
 from rest_framework import serializers
-from .models import Task
 from django.contrib.auth.models import User
+from .models import Post, Comment
 
-class TaskSerializer(serializers.ModelSerializer):
-    title = serializers.CharField(required=True)
-    description = serializers.CharField(required=False)
-    completed = serializers.BooleanField(required=False)
-
+class PostSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Task
-        fields = (
-            "id",
-            "title",
-            "description",
-            "completed",
-            "created_at",
-            "updated_at",
-        )
+        model = Post
+        fields = '__all__'
+
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = '__all__'
+
+
 
 class UserLoginSerializer(serializers.Serializer):
     username = serializers.CharField()
